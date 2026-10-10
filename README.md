@@ -1,5 +1,9 @@
 # HomeAssistant-Atrea
 
+This fork contains changes under review. See [FORK.md](FORK.md) for status and
+installation notes. Names are generic; installation-specific labels and
+calibration belong in Home Assistant configuration.
+
 Custom component - climate platform - for Atrea ventilation units for Home Assistant
 
 ## Installation using HACS

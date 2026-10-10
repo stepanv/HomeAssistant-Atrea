@@ -1,15 +1,18 @@
 {
   "domain": "atrea",
   "name": "Atrea",
-  "documentation": "https://github.com/JurajNyiri/HomeAssistant-Atrea",
+  "documentation": "https://github.com/stepanv/HomeAssistant-Atrea",
   "dependencies": [],
   "codeowners": [
-    "@JurajNyiri"
+    "@JurajNyiri",
+    "@stepanv"
   ],
   "requirements": [
     "pyatrea @ https://github.com/stepanv/pyatrea/archive/f7e2dc8ea734c89a97a7b295dc49f0e9f68fc2da.zip"
   ],
-  "version": "6.2.0",
+  "version": "6.3.0b1",
   "config_flow": true,
-  "homeassistant": "2022.4.0"
+  "homeassistant": "2022.4.0",
+  "issue_tracker": "https://github.com/stepanv/HomeAssistant-Atrea/issues",
+  "iot_class": "local_polling"
 }
