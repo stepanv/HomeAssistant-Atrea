@@ -8,9 +8,9 @@
     "@stepanv"
   ],
   "requirements": [
-    "pyatrea @ https://github.com/stepanv/pyatrea/archive/f7e2dc8ea734c89a97a7b295dc49f0e9f68fc2da.zip"
+    "pyatrea @ https://github.com/stepanv/pyatrea/archive/902a0c054da6456aa9970c1ec339de671afa8dba.zip"
   ],
-  "version": "6.3.0b2",
+  "version": "6.3.0b3",
   "config_flow": true,
   "homeassistant": "2022.4.0",
   "issue_tracker": "https://github.com/stepanv/HomeAssistant-Atrea/issues",

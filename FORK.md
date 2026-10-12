@@ -15,6 +15,7 @@ belong in the user's Home Assistant configuration.
 | Remove invalid climate state unit | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/42 |
 | Legacy temperature fallback | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/41 |
 | Library runtime dependency | https://github.com/JurajNyiri/pyatrea/pull/8 |
+| Library device display metadata | https://github.com/JurajNyiri/pyatrea/pull/10 |
 | Library discrete-power API | https://github.com/JurajNyiri/pyatrea/pull/9 |
 
 All upstream contributions remain drafts pending review. The discrete-control
