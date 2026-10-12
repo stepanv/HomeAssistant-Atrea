@@ -12,6 +12,7 @@ belong in the user's Home Assistant configuration.
 | Off and Auto command dispatch | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/38 |
 | Discrete ventilation/circulation controls | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/39 |
 | Native status and optional diagnostic entities | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/40 |
+| Remove invalid climate state unit | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/42 |
 | Legacy temperature fallback | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/41 |
 | Library runtime dependency | https://github.com/JurajNyiri/pyatrea/pull/8 |
 | Library discrete-power API | https://github.com/JurajNyiri/pyatrea/pull/9 |
