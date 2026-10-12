@@ -135,3 +135,33 @@ async def test_percentage_service_to_library_to_http(climate, monkeypatch, legac
 
     get.assert_called_once()
     assert get.call_args.args[0].endswith(f"&{register}00033")
+
+
+@pytest.mark.parametrize("name,code", POWER_MODES.items())
+def test_fan_choice_and_both_readbacks_agree(climate, name, code):
+    from custom_components.atrea.sensor import AtreaRegisterSensor, SENSOR_REGISTERS
+    from test_operating_sensors import context
+
+    climate._current_fan_mode = f"{int(code)}%"
+    assert climate.fan_mode == name
+    for register in ("H10714", "H10704"):
+        entry, data = context({register: str(int(code)), "C10509": "1"})
+        data["powerModeOptions"] = {int(code): "Device abbreviation"}
+        sensor = AtreaRegisterSensor(entry, data, register, SENSOR_REGISTERS[register])
+        assert sensor.native_value == name
+
+
+@pytest.mark.parametrize("code", range(20))
+def test_operating_mode_readbacks_match_preset_labels(climate, code):
+    from pyatrea import AtreaMode
+    from custom_components.atrea.const import ALL_PRESET_LIST
+    from custom_components.atrea.sensor import AtreaRegisterSensor, SENSOR_REGISTERS
+    from test_operating_sensors import context
+
+    climate._current_preset = AtreaMode(code)
+    climate._userLabels = {}
+    assert climate.preset_mode == ALL_PRESET_LIST[code]
+    for register in ("H10715", "H10705"):
+        entry, data = context({register: str(code)})
+        sensor = AtreaRegisterSensor(entry, data, register, SENSOR_REGISTERS[register])
+        assert sensor.native_value == climate.preset_mode
