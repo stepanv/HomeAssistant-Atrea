@@ -14,6 +14,9 @@ belong in the user's Home Assistant configuration.
 | Native status and optional diagnostic entities | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/40 |
 | Remove invalid climate state unit | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/42 |
 | Legacy temperature fallback | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/41 |
+| Manual/Weekly Control selector | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/44 |
+| Command error reporting and polling recovery | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/43 |
+| Command authentication and queue delivery | https://github.com/JurajNyiri/pyatrea/pull/11 |
 | Library runtime dependency | https://github.com/JurajNyiri/pyatrea/pull/8 |
 | Library device display metadata | https://github.com/JurajNyiri/pyatrea/pull/10 |
 | Library discrete-power API | https://github.com/JurajNyiri/pyatrea/pull/9 |
