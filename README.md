@@ -122,3 +122,11 @@ code remains available in `raw_value` for name-independent comparisons.
 
 Historical Activity entries retain their original wording. Household names
 stay in your HA instance or unit configuration, outside the integration source.
+
+### Command failure reporting
+
+Climate writes report a failed library command as a Home Assistant error, and
+release the polling guard even if sending, refreshing, or reading back raises.
+An empty queue refreshes state without treating the no-op as a rejected write.
+Existing program/mode/power command choices are unchanged. The library must
+also detect rejected authentication responses; see its command-delivery fix.
