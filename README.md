@@ -151,3 +151,17 @@ and raw channel values in attributes. Temporary is not a selectable option,
 matching the inspected RD5 GUI. A command is reported successful only after a
 fresh readback confirms the requested program; failures produce an HA error.
 Hardware validation targets R-5 RK5; RD4 behavior has automated coverage only.
+
+### Existing climate mode dropdown
+
+The standard climate popup uses Atrea-specific English display labels: Manual
+for the legacy fan_only value, Weekly for auto, and Off for off. The raw HA
+values and command behavior remain unchanged. No additional select entity is
+created. HA's built-in popup still calls this dropdown Mode; its heading is
+not an integration-provided entity translation.
+
+This is a wording change to the existing compatibility control, not a new
+program API: fan_only still requests Manual plus Ventilation. Legacy temporary
+program handling also uses fan_only, so this dropdown is not an authoritative
+readout of every per-channel program state; the program attribute remains
+available. Off retains its existing operating-mode action.
