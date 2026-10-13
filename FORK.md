@@ -14,7 +14,7 @@ belong in the user's Home Assistant configuration.
 | Native status and optional diagnostic entities | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/40 |
 | Remove invalid climate state unit | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/42 |
 | Legacy temperature fallback | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/41 |
-| Existing climate dropdown labels | https://github.com/stepanv/HomeAssistant-Atrea/tree/fix/climate-control-labels |
+| Existing climate dropdown labels | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/45 |
 | Command error reporting and polling recovery | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/43 |
 | Command authentication and queue delivery | https://github.com/JurajNyiri/pyatrea/pull/11 |
 | Library runtime dependency | https://github.com/JurajNyiri/pyatrea/pull/8 |
