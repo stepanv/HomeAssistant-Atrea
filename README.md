@@ -144,3 +144,11 @@ program API: fan_only still requests Manual plus Ventilation. Legacy temporary
 program handling also uses fan_only, so this dropdown is not an authoritative
 readout of every per-channel program state; the program attribute remains
 available. Off retains its existing operating-mode action.
+
+### Climate state refresh
+
+The climate entity listens to the shared unit coordinator. Changes reported by
+unit polling are published to climate consumers, including HomeKit, immediately
+instead of waiting for the independent climate polling cycle. This does not
+change commands or HVAC mode meanings. HomeKit still maps `fan_only` to Cool;
+HA entity translations do not rename Apple's thermostat modes.
