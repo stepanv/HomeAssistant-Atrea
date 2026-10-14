@@ -9,14 +9,12 @@ belong in the user's Home Assistant configuration.
 | Change | Upstream PR |
 | --- | --- |
 | Options without saved presets | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/37 |
-| Off and Auto command dispatch | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/38 |
 | Discrete ventilation/circulation controls | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/39 |
 | Native status and optional diagnostic entities | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/40 |
-| Remove invalid climate state unit | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/42 |
 | Legacy temperature fallback | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/41 |
 | Climate coordinator state updates | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/46 |
-| Existing climate dropdown labels | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/45 |
-| Command error reporting and polling recovery | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/43 |
+| Climate mode labels and invalid state-unit removal | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/45 |
+| Climate command dispatch, errors and polling recovery | https://github.com/JurajNyiri/HomeAssistant-Atrea/pull/43 |
 | Command authentication and queue delivery | https://github.com/JurajNyiri/pyatrea/pull/11 |
 | Library runtime dependency | https://github.com/JurajNyiri/pyatrea/pull/8 |
 | Library device display metadata | https://github.com/JurajNyiri/pyatrea/pull/10 |
@@ -64,3 +62,6 @@ entities from the device page; diagnostic entities are disabled by default.
 
 The separate Control select from draft PR #44 was withdrawn: the requested UI
 change belongs to the existing climate dropdown. Command reliability fixes remain.
+
+Draft #45 consolidates former #42; draft #43 consolidates former #38.
+The superseded PRs are closed and their branches retained for traceability.
