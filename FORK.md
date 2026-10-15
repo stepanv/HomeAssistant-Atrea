@@ -65,3 +65,13 @@ change belongs to the existing climate dropdown. Command reliability fixes remai
 
 Draft #45 consolidates former #42; draft #43 consolidates former #38.
 The superseded PRs are closed and their branches retained for traceability.
+
+## Adopted upstream contributions
+
+Startup retry includes filipusek's upstream PR #36 (commit `2c7d7c9`), with
+its missing `requests` import corrected locally. Network setup failures raise
+`ConfigEntryNotReady` so HA retries when the unit becomes reachable. The error
+message omits raw request details. Six regression cases cover connection and
+timeout failures, retry success, rejected status, unrelated programming errors,
+and running-coordinator recovery. This does not add timeouts to library reads
+or expand the setup catch to later metadata requests.

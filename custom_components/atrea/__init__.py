@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.exceptions import ConfigEntryNotReady
 from pyatrea import Atrea
+import requests
 
 from .utils import update_listener
 from .const import DOMAIN, LOGGER, MIN_TIME_BETWEEN_SCANS
@@ -74,9 +75,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         status = await hass.async_add_executor_job(atrea.getStatus, False)
     except requests.exceptions.RequestException as err:
-        raise ConfigEntryNotReady(f"Cannot connect to Atrea unit: {err}") from err
+        raise ConfigEntryNotReady("Cannot connect to Atrea unit") from err
 
-    
 
     if not status:
         raise ConfigEntryNotReady("Incorrect password or too many signed in users.")
