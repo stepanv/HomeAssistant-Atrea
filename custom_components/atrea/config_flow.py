@@ -1,6 +1,7 @@
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_PASSWORD, CONF_NAME
 from homeassistant.core import callback
+from .co2 import CONF_CO2_INPUTS, CO2_REGISTERS, calibration
 from .utils import isAtreaUnit, processFanModes
 import voluptuous as vol
 from .const import (
@@ -161,7 +162,7 @@ class AtreaOptionsFlowHandler(config_entries.OptionsFlow):
         #self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_general(self, user_input=None):
         errors = {}
         host = self.config_entry.data[CONF_IP_ADDRESS]
         port = self.config_entry.data[CONF_PORT]
@@ -238,7 +239,7 @@ class AtreaOptionsFlowHandler(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=data,
                 )
-                return self.async_create_entry(title="", data=None)
+                return self.async_create_entry(title="", data=self.options)
             except Exception as e:
                 LOGGER.debug(e)
                 if "Failed to establish a new connection" in str(e):
@@ -274,5 +275,41 @@ class AtreaOptionsFlowHandler(config_entries.OptionsFlow):
         LOGGER.debug("Returning form.")
 
         return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(spec), errors=errors,
+            step_id="general", data_schema=vol.Schema(spec), errors=errors,
         )
+
+
+    async def async_step_init(self, user_input=None):
+        return self.async_show_menu(step_id="init", menu_options=["general", "co2"])
+
+    async def async_step_co2(self, user_input=None):
+        """Configure only inputs that are connected to calibrated CO2 sensors."""
+        errors = {}
+        if user_input is not None:
+            inputs = {}
+            for key in CO2_REGISTERS:
+                if user_input.get(f"{key}_enabled", False):
+                    coefficients = {"slope": user_input.get(f"{key}_slope"),
+                                    "offset": user_input.get(f"{key}_offset")}
+                    parsed = calibration({CONF_CO2_INPUTS: {key: coefficients}}, key)
+                    if parsed is None:
+                        errors["base"] = "invalid_co2_calibration"
+                    else:
+                        inputs[key] = dict(zip(("slope", "offset"), parsed))
+            if not errors:
+                return self.async_create_entry(
+                    title="", data={**self.options, CONF_CO2_INPUTS: inputs}
+                )
+        spec = {}
+        for key in CO2_REGISTERS:
+            saved = calibration(self.options, key)
+            enabled = saved is not None
+            if user_input is not None:
+                enabled = user_input.get(f"{key}_enabled", False)
+            spec[vol.Required(f"{key}_enabled", default=enabled)] = bool
+            for index, field in enumerate(("slope", "offset")):
+                name = f"{key}_{field}"
+                value = user_input.get(name) if user_input is not None else (saved[index] if saved else None)
+                description = {"suggested_value": value} if value is not None else {}
+                spec[vol.Optional(name, description=description)] = vol.Coerce(float)
+        return self.async_show_form(step_id="co2", data_schema=vol.Schema(spec), errors=errors)

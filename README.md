@@ -180,3 +180,25 @@ IDs, history and user overrides are retained, with no registry deletion. Existin
 unused entities can be disabled manually. This covers verified RD5 mappings;
 it does not execute the device's GUI scripts or infer every possible accessory.
 See [component rules](docs/component-discovery.md).
+
+### Calibrated analog CO₂ sensors
+
+In **Settings → Devices & services → Atrea → Configure → Analog CO₂ sensors**,
+enable IN1 and/or IN2 only if the input is connected to a CO₂ sensor. Supply each
+input's calibrated **slope (ppm/V)** and **offset (ppm)**:
+
+`CO₂ (ppm) = voltage (V) × slope + offset`
+
+There is no default conversion: calibration depends on the installed sensor.
+Values are truncated to whole ppm, matching HA templates using `| int`. Missing,
+invalid, out-of-range input voltage (outside 0–12 V), failed updates, and negative
+calculated concentrations are unavailable. Both original voltage entities remain.
+Changing calibration updates the existing CO₂ entity; disabling it makes it
+unavailable without deleting its identity or history. No unit commands are sent.
+
+For migration from a template, first enable and verify the native sensor alongside
+it. Then remove/reload the old template and change the native entity's ID in HA to
+exactly the old entity ID. Keep the `ppm` unit, `carbon_dioxide` device class and
+`measurement` state class. This retains the recorder/history identity. Resolve any
+old registry entry before renaming; do not run both sensors under the same ID.
+Room names and empirical calibration belong in each installation's HA settings.

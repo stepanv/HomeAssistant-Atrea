@@ -32,7 +32,7 @@
   },
   "options": {
     "step": {
-      "init": {
+      "general": {
         "data": {
           "name": "Name (Optional)",
           "presets": "Enabled presets",
@@ -61,13 +61,32 @@
           "fan_modes": "Fan modes"
         },
         "description": "Modify settings of your Atrea unit."
+      },
+      "init": {
+        "menu_options": {
+          "general": "General settings",
+          "co2": "Analog CO₂ sensors"
+        }
+      },
+      "co2": {
+        "title": "Analog CO₂ sensors",
+        "description": "Enable only inputs connected to CO₂ sensors. Enter your calibrated slope and offset: ppm = voltage × slope + offset. Values are truncated to whole ppm. There is no universal voltage-to-CO₂ conversion.",
+        "data": {
+          "in1_enabled": "IN1 measures CO₂",
+          "in1_slope": "IN1 slope (ppm/V)",
+          "in1_offset": "IN1 offset (ppm)",
+          "in2_enabled": "IN2 measures CO₂",
+          "in2_slope": "IN2 slope (ppm/V)",
+          "in2_offset": "IN2 offset (ppm)"
+        }
       }
     },
     "error": {
       "already_configured": "IP address already configured",
       "invalid_auth": "Incorrect password or too many signed in users.",
       "not_atrea_unit": "Discovered device is not a supported Atrea unit",
-      "invalid_fan_mode": "Invalid fan mode format, use only comma and numbers between 12 and 100."
+      "invalid_fan_mode": "Invalid fan mode format, use only comma and numbers between 12 and 100.",
+      "invalid_co2_calibration": "Each enabled input needs a finite positive slope and a finite offset."
     }
   },
   "entity": {

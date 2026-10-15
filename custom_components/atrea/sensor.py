@@ -21,6 +21,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 from pyatrea import AtreaMode
 
+from .co2 import CO2_REGISTERS, calibration, co2_value
 from .capabilities import supports_register
 from .const import DOMAIN, ALL_PRESET_LIST, POWER_DISPLAY_LABELS
 from .utils import convert_temperature, forced_mode_label
@@ -270,9 +271,22 @@ async def async_setup_entry(
                 AtreaRegisterSensor(entry, data, register, description)
             )
 
+        for input_key, register in CO2_REGISTERS.items():
+            key = f"{input_key}_co2"
+            if (register in status and key not in known_sensors
+                    and calibration(getattr(entry, "options", {}), input_key) is not None):
+                known_sensors.add(key)
+                entities.append(AtreaCO2Sensor(entry, data, input_key))
+
         if entities:
             async_add_entities(entities)
 
+    async def async_options_updated(hass, updated_entry):
+        # Re-evaluate discovery and values without device requests or commands.
+        coordinator.async_update_listeners()
+
+    if hasattr(entry, "add_update_listener"):
+        entry.async_on_unload(entry.add_update_listener(async_options_updated))
     async_discover_sensors()
     entry.async_on_unload(coordinator.async_add_listener(async_discover_sensors))
 
@@ -409,3 +423,30 @@ class AtreaRegisterSensor(CoordinatorEntity, SensorEntity):
             **({"raw_value": (self._data.get("status") or {}).get(self._register)}
                if self._attr_state_class is None or self._pulse_duration else {}),
         }
+
+
+class AtreaCO2Sensor(AtreaRegisterSensor):
+    """Calibrated CO2 reading from an explicitly configured analog input."""
+
+    def __init__(self, entry, data, input_key):
+        self._entry = entry
+        self._input_key = input_key
+        super().__init__(entry, data, CO2_REGISTERS[input_key], {
+            "key": f"{input_key}_co2", "name": f"{input_key.upper()} CO₂",
+            "unit": "ppm", "device_class": SensorDeviceClass.CO2,
+            "display_precision": 0, "convert": int,
+        })
+
+    @property
+    def native_value(self):
+        return co2_value(
+            (self._data.get("status") or {}).get(self._register),
+            calibration(self._entry.options, self._input_key),
+        )
+
+    @property
+    def extra_state_attributes(self):
+        coefficients = calibration(self._entry.options, self._input_key)
+        return {"register": self._register,
+                "slope_ppm_per_volt": coefficients[0] if coefficients else None,
+                "offset_ppm": coefficients[1] if coefficients else None}
