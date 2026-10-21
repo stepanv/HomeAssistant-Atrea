@@ -59,3 +59,36 @@ def test_logical_temperatures_take_precedence_on_rk5():
     assert device.current_temperature == 22.5
     assert device.extra_state_attributes["supply_air_temp"] == 21.1
     assert device.extra_state_attributes["outside_temp"] == -2.5
+
+
+@pytest.mark.parametrize("effective", [0, 1, 3, 4])
+def test_preset_keeps_requested_automatic_during_effective_override(effective):
+    device = climate_for({
+        "H10700": "0", "H10705": str(effective), "H10715": "1",
+        "H10714": "33", "H10712": "0", "D10200": "0",
+    })
+    assert device.preset_mode == "Automatic"
+    assert device._current_preset == AtreaMode(effective)
+    # The physical contact can already be released while the override continues.
+    device.data["status"]["H10705"] = "3"
+    device.manualUpdate(False)
+    assert device.preset_mode == "Automatic"
+    device.data["status"]["H10715"] = "4"
+    device.manualUpdate(False)
+    assert device.preset_mode == "Circulation"
+
+
+@pytest.mark.parametrize("invalid", [None, "", "invalid", "65535", "-1"])
+def test_invalid_requested_preset_does_not_show_effective_mode(invalid):
+    device = climate_for({
+        "H10700": "0", "H10705": "3", "H10715": invalid, "H10714": "33",
+    })
+    assert device.preset_mode is None
+
+
+@pytest.mark.parametrize("status", [
+    {"H10700": "0", "H10705": "2", "H10714": "50"},
+    {"H01015": "1", "H01000": "2", "H01005": "50", "H01001": "50"},
+])
+def test_legacy_preset_without_requested_register(status):
+    assert climate_for(status).preset_mode == "Ventilation"

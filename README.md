@@ -202,3 +202,16 @@ exactly the old entity ID. Keep the `ppm` unit, `carbon_dioxide` device class an
 `measurement` state class. This retains the recorder/history identity. Resolve any
 old registry entry before renaming; do not run both sensors under the same ID.
 Room names and empirical calibration belong in each installation's HA settings.
+
+### Presets and physical input activity
+
+The climate preset shows the **requested operating mode** on units exposing it.
+A physical input can temporarily change the effective mode without changing the
+preset: for example, Automatic stays selected during a bathroom ventilation boost.
+Use the effective and forced operating-mode sensors to see what the unit is doing.
+Older units without a separate requested-mode register retain their existing display.
+
+D1–D4 binary sensors show the physical contact state sampled about every 10 seconds.
+They are not button-event queues: a short pulse between polls may be missed and
+will not be replayed later. The forced operating-mode sensor can still show the
+resulting timed override after the contact has been released.

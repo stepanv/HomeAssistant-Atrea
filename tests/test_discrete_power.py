@@ -158,7 +158,7 @@ def test_operating_mode_readbacks_match_preset_labels(climate, code):
     from custom_components.atrea.sensor import AtreaRegisterSensor, SENSOR_REGISTERS
     from test_operating_sensors import context
 
-    climate._current_preset = AtreaMode(code)
+    climate._requested_preset = AtreaMode(code)
     climate._userLabels = {}
     assert climate.preset_mode == ALL_PRESET_LIST[code]
     for register in ("H10715", "H10705"):
