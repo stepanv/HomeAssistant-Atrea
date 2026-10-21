@@ -10,6 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from pyatrea import Atrea
 import requests
 
+from .activity import ActivityLog
 from .utils import update_listener
 from .const import DOMAIN, LOGGER, MIN_TIME_BETWEEN_SCANS
 
@@ -34,7 +35,9 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+        entry_data = hass.data[DOMAIN].pop(entry.entry_id, None)
+        if activity_log := (entry_data or {}).get("activity_log"):
+            await activity_log.async_stop()
     return unload_ok
 
 
@@ -109,4 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_create_task(
             hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
         )
+        activity_log = ActivityLog(hass, entry, atrea, hass.data[DOMAIN][entry.entry_id])
+        hass.data[DOMAIN][entry.entry_id]["activity_log"] = activity_log
+        await activity_log.async_start()
         return True
