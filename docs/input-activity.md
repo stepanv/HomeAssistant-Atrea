@@ -20,7 +20,9 @@ Neither observation proves the exact time of a physical press.
 
 Every 30 seconds the integration reads the controller's retained H10712 log.
 It matches logged episodes against the source transitions seen by normal status
-polling. If normal polling saw the transition, **no recovery entry is added**.
+polling. Controller log timestamps can trail live status; matching allows one
+status interval of lag and consumes each observed transition only once. If normal
+polling saw the transition, **no recovery entry is added**.
 An unseen episode is recovered only after it ends, with two status-poll intervals
 of settling time for an in-flight update. Current episodes are left pending.
 

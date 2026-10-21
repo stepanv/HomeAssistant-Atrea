@@ -509,3 +509,28 @@ def test_identical_room_names_keep_source_inputs_distinguishable(reader):
         assert sensor.native_value == "Office (D1)"
         reader.data["status"] = {"H10712": "6"}
         assert sensor.native_value == "Office (D4)"
+
+
+@pytest.mark.asyncio
+async def test_controller_log_timestamp_trails_live_observation(reader):
+    observe(reader, 13, 6)
+    reader.hass.async_add_executor_job.return_value = [(0, 0), (36019, 6)]
+    await reader.async_poll()
+    assert not events(reader)
+    assert reader.cursor["position"] == 2
+    assert not reader.observations
+
+
+@pytest.mark.asyncio
+async def test_one_observation_cannot_suppress_two_nearby_episodes(reader):
+    observe(reader, 20, 6)
+    reader.hass.async_add_executor_job.return_value = [
+        (0, 0),
+        (36019, 6),
+        (36021, 0),
+        (36023, 6),
+        (36025, 0),
+    ]
+    await reader.async_poll()
+    assert len(events(reader)) == 1
+    assert "10:00:23" in events(reader)[0]["message"]

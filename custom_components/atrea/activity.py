@@ -147,10 +147,19 @@ class ActivityLog:
     def _observation_data(self):
         return {"last_source": self._last_source, "transitions": self.observations}
 
-    def _was_observed(self, value: int, start: str, end: str | None) -> bool:
-        return any(
-            raw == value and start <= stamp and (end is None or stamp < end)
-            for stamp, raw in self.observations
+    def _observed_transition(self, value: int, start: str, end: str | None):
+        # Retained logging can trail live status (six seconds on the tested RK5).
+        # Allow one status interval, and consume each observation only once.
+        earliest = (datetime.fromisoformat(start) - MIN_TIME_BETWEEN_SCANS).isoformat()
+        return next(
+            (
+                point
+                for point in self.observations
+                if point[1] == value
+                and earliest <= point[0]
+                and (end is None or point[0] < end)
+            ),
+            None,
         )
 
     @callback
@@ -243,7 +252,13 @@ class ActivityLog:
                     )
                     start_time = when.isoformat()
                     end_time = await self._episode_end(day, samples, index, today)
-                    if self._was_observed(value, start_time, end_time):
+                    observed = self._observed_transition(value, start_time, end_time)
+                    if observed is not None:
+                        # Commit consumption before looking at another episode,
+                        # so one live transition cannot hide two retained ones.
+                        await self._save(day, index + 1, samples[index])
+                        if observed in self.observations:
+                            self.observations.remove(observed)
                         previous = value
                         continue
                     if end_time is None or (
