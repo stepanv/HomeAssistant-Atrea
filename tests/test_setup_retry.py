@@ -42,7 +42,10 @@ async def test_unreachable_unit_requests_setup_retry(setup, error):
 async def test_setup_recovers_on_next_attempt(setup):
     hass, entry, unit = setup
     unit.getStatus.side_effect = [ConnectionError('unit offline'), {'H10700':'0'}]
-    with patch('custom_components.atrea.Atrea',return_value=unit), patch('custom_components.atrea.DataUpdateCoordinator'):
+    with patch('custom_components.atrea.Atrea',return_value=unit), patch('custom_components.atrea.DataUpdateCoordinator'), patch(
+        'custom_components.atrea.ActivityLog',
+        side_effect=lambda *args: SimpleNamespace(async_start=AsyncMock()),
+    ):
         with pytest.raises(ConfigEntryNotReady):
             await async_setup_entry(hass,entry)
         assert await async_setup_entry(hass,entry) is True
@@ -80,7 +83,11 @@ async def test_running_coordinator_recovers_without_reloading_entry(setup, tmp_p
         return DataUpdateCoordinator(real_hass, logger, config_entry=None, **kwargs)
     try:
         with patch('custom_components.atrea.Atrea',return_value=unit), \
-             patch('custom_components.atrea.DataUpdateCoordinator',side_effect=coordinator_factory):
+             patch('custom_components.atrea.DataUpdateCoordinator',side_effect=coordinator_factory), \
+             patch(
+                 'custom_components.atrea.ActivityLog',
+                 side_effect=lambda *args: SimpleNamespace(async_start=AsyncMock()),
+             ):
             await async_setup_entry(hass,entry)
         coordinator = hass.data['atrea']['test']['coordinator']
         changes=[]
