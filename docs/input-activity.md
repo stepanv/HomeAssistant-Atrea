@@ -1,51 +1,61 @@
-# Retained D1–D4 activity
+# Input activity and recovery
 
-On controllers exposing `config/log.cgi`, the integration checks the retained
-H10712 (forced operating source) log every 30 seconds. This can recover short
-input-triggered activity missed by normal status polling. It only reads data;
-input binary sensors continue to show the actual status registers.
+D1–D4 are generic controller inputs. Their names, pulse/maintained behavior,
+priorities, modes and durations belong to the unit configuration. This integration
+never assumes that a particular input is a kitchen, bathroom or push button.
 
-## What appears in Activity
+## Normal activity
 
-An entry is attached to the corresponding D1–D4 entity and uses its current HA
-name, for example:
+The **Forced operating mode** sensor reports the source selected by the controller
+(H10712). Its input names use an HA input-entity name override first, a controller
+label second, and `D1 input`…`D4 input` otherwise. Rename an input entity in HA to
+personalize its source label and recovered entries. No YAML mapping is required.
+The binary input sensors continue to report the contact registers, independently.
 
-> D1 input became the forced operating source at 2026-10-21 08:05:00
-> (controller local time)
+A short pulse can be missed while its timed action remains visible for minutes.
+A masked request can become effective after a higher-priority source ends.
+Neither observation proves the exact time of a physical press.
 
-The Activity entry itself has the discovery time. The message preserves the unit's
-time, without backdating the HA event: HA's live Activity stream can discard
-backdated events. No synthetic input on/off states are generated.
+## Recovery without a second normal entry
 
-## Recovery and limitations
+Every 30 seconds the integration reads the controller's retained H10712 log.
+It matches logged episodes against the source transitions seen by normal status
+polling. If normal polling saw the transition, **no recovery entry is added**.
+An unseen episode is recovered only after it ends, with two status-poll intervals
+of settling time for an in-flight update. Current episodes are left pending.
 
-- The first run imports the most recent ten minutes of today's log.
-- A persistent cursor prevents normal poll/restart duplicates. The earlier
-  experimental seconds-only cursor is migrated without replaying old entries.
-- After downtime, available retained days are recovered chronologically, up to
-  three days per poll. Days already expired on the controller cannot be recovered.
-- The midnight baseline and repeated unchanged values are not activations.
-- Same-second transitions and clock changes retain the controller's row order.
-  The reported time is explicitly controller-local; HA and controller clocks
-  should agree. An ambiguous autumn clock-change time is not assigned a guessed
-  UTC offset.
-- H10712 identifies the forced source, not every physical contact edge. Repeated
-  presses while the source remains D1, or inputs masked by another priority,
-  cannot be inferred. A source resuming after a higher priority is activity,
-  not proof of a new press. Normal input state-change entries may also appear.
-- Network/authentication/unsupported-log errors leave normal integration polling
-  unaffected and retry later without advancing the cursor. A truncated or
-  rewritten log before the saved position is not replayed; it emits a warning.
-- Event recording and cursor storage are separate operations: a crash between
-  them can duplicate the last batch. This is not an exactly-once event journal.
+Example recovery message (using the input entity's name):
 
-Verified with an R-5 RK5 retained-log format. Other controllers may not expose
-this endpoint; no calibration, household names, or firmware assumptions are added.
+> Recovered forced-source activity at 2026-10-21 08:05:00 (unit time)
 
-## Review journey
+The Activity timestamp is discovery time; the message preserves the unit's time.
+Backdated HA events can disappear from an already-open Activity stream.
 
-Trigger an input, allow a poll, and open the device's Activity tab. Capture the
-entry showing the input name, discovery time and controller time. Leave the view
-open for another activation to check live appearance. Reload the integration:
-the already consumed entries should not be emitted again. The climate preset
-and physical input states are not changed by this reader.
+## Persistence and limits
+
+- The first installation baselines the existing log rather than replaying activity
+  that may already exist in HA. Earlier experimental cursors migrate in place.
+- Cursors and observed transitions survive normal reloads/restarts. Available
+  retained days are recovered after downtime in bounded batches. Expired history
+  is not recoverable. An episode spanning midnight is not a new activation.
+- Contact on/off, effective mode and fan changes remain separate real state
+  changes. Recovery adds no synthetic contact states and sends no commands.
+- Repeated presses with no source change are not recoverable. Source resumption
+  is not called a new press. Names and behavior are independent of input numbers.
+- Controller and HA local clocks must agree for transition matching. Backwards
+  clock changes with ambiguous episode boundaries are skipped conservatively.
+- Unsupported logs and request failures do not affect normal status polling.
+  Rewritten/truncated history before the cursor is not replayed; a warning is logged.
+- HA event recording and cursor storage are not one transaction. A hard crash
+  during the small persistence window can still duplicate the last event.
+
+## Validation journey
+
+1. Pulse or hold any configured input: its ordinary forced-source change appears,
+   with no additional recovery entry after history polling or after it ends.
+2. A whole source episode missed between status polls is recovered once after it
+   ends. Automated tests simulate this without controlling a real unit.
+3. Reload: consumed history and observed transitions are not replayed.
+4. Rename an input: subsequent source labels and recovery entries use that name.
+
+Verified against an R-5 RK5 log format; other controllers may lack retained logs.

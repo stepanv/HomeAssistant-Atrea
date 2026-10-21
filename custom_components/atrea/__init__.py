@@ -4,6 +4,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -46,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN][entry.entry_id]["status"] = await hass.async_add_executor_job(
             atrea.getStatus, False
         )
+        hass.data[DOMAIN][entry.entry_id]["status_observed_at"] = dt_util.now().replace(tzinfo=None).isoformat()
         hass.data[DOMAIN][entry.entry_id]["params"] = await hass.async_add_executor_job(
             atrea.getParams, False
         )
@@ -77,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # not end in setup_error, which is never retried.
     try:
         status = await hass.async_add_executor_job(atrea.getStatus, False)
+        status_observed_at = dt_util.now().replace(tzinfo=None).isoformat()
     except requests.exceptions.RequestException as err:
         raise ConfigEntryNotReady("Cannot connect to Atrea unit") from err
 
@@ -102,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 await hass.async_add_executor_job(atrea.getSupportedForcedModes)
             ).items(),
             "status": status,
+            "status_observed_at": status_observed_at,
             "model": (await hass.async_add_executor_job(atrea.getModel)),
             "params": (await hass.async_add_executor_job(atrea.getParams, False)),
             "translations": (await hass.async_add_executor_job(atrea.getTranslations)),
