@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, EVENT_LOGBOOK_ENTRY
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -58,11 +59,10 @@ def discover_conditions(entry, data, known):
     return entities
 
 
-class AtreaConditionSensor(CoordinatorEntity, BinarySensorEntity):
+class AtreaConditionBase(CoordinatorEntity):
     """A problem sensor with the complete list of active controller flags."""
 
     _attr_has_entity_name = True
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, entry, data, kind):
         super().__init__(data["coordinator"])
@@ -117,6 +117,12 @@ class AtreaConditionSensor(CoordinatorEntity, BinarySensorEntity):
             ],
         }
 
+
+class AtreaConditionSensor(AtreaConditionBase, BinarySensorEntity):
+    """Boolean problem status with Activity messages for changing conditions."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
         self._previous_active = set(self._active_codes) if self.available else None
@@ -155,3 +161,35 @@ class AtreaConditionSensor(CoordinatorEntity, BinarySensorEntity):
             # A missing flag is not proof that its fault cleared.
             current |= previous - current - cleared
         self._previous_active = current
+
+
+def discover_condition_details(entry, data, known):
+    """Add readable reasons to the device page for supported condition groups."""
+    entities = []
+    for kind in ("alert", "warning"):
+        if kind not in known and condition_codes(data, kind):
+            known.add(kind)
+            entities.append(AtreaConditionDetailsSensor(entry, data, kind))
+    return entities
+
+
+class AtreaConditionDetailsSensor(AtreaConditionBase, SensorEntity):
+    """Readable conditions using the same flags and labels as problem sensors."""
+
+    def __init__(self, entry, data, kind):
+        super().__init__(entry, data, kind)
+        label = "Fault" if kind == "alert" else "Warning"
+        self._attr_name = f"{label} details"
+        device_id = slugify(f"atrea_{entry.data.get(CONF_IP_ADDRESS)}")
+        self._attr_unique_id = f"{device_id}_{label.lower()}_details"
+
+    @property
+    def native_value(self):
+        if not self.available:
+            return None
+        labels = self.extra_state_attributes[self._list_attribute]
+        if not labels:
+            return "No active faults" if self._kind == "alert" else "No active warnings"
+        text = "; ".join(labels)
+        # HA limits state strings to 255 characters; attributes retain every reason.
+        return text if len(text) <= 255 else text[:254] + "…"

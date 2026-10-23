@@ -24,3 +24,11 @@ other flags are missing; `unavailable_codes` lists the incomplete readings.
 The sensors do not reset faults, acknowledge warnings, create notifications or
 send commands. Existing acknowledgement buttons are separate. Automations can
 use these sensors to notify on a new problem or on a maintenance reminder.
+
+**Fault details** and **Warning details** show the active descriptions directly
+in the device page's Sensors section, for example “Filter replace interval”.
+With complete readings and no active conditions they show “No active faults”
+or “No active warnings”. Multiple descriptions are separated by semicolons.
+Display text is limited to 255 characters; attributes always retain the full
+list and register codes. These text sensors share the problem sensors' data
+and availability rules and do not emit additional custom Activity messages.

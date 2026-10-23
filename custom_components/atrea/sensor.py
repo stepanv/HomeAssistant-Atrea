@@ -23,6 +23,7 @@ from pyatrea import AtreaMode
 
 from .co2 import CO2_REGISTERS, calibration, co2_value
 from .capabilities import supports_register
+from .conditions import discover_condition_details
 from .const import DOMAIN, ALL_PRESET_LIST, POWER_DISPLAY_LABELS
 from .utils import convert_temperature, forced_mode_label
 
@@ -254,9 +255,11 @@ async def async_setup_entry(
     coordinator = data["coordinator"]
     known_sensors: set[str] = set()
 
+    known_conditions: set[str] = set()
+
     def async_discover_sensors() -> None:
         status = data.get("status") or {}
-        entities = []
+        entities = discover_condition_details(entry, data, known_conditions)
 
         for register, description in (*SENSOR_REGISTERS.items(), ("H10204", CIRCULATION_SENSOR)):
             if (

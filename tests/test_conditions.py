@@ -207,3 +207,92 @@ def test_reconnect_does_not_invent_fault_change_messages(data):
     data["coordinator"].last_update_success = True
     update(entity)
     entity.hass.bus.async_fire.assert_not_called()
+
+
+def test_details_discovery_and_identity(data):
+    from custom_components.atrea.conditions import discover_condition_details
+
+    entry = NS(data={"ip_address": "192.0.2.1"})
+    known = set()
+    details = discover_condition_details(entry, data, known)
+    assert [e.name for e in details] == ["Fault details", "Warning details"]
+    assert [e.native_value for e in details] == [
+        "No active faults",
+        "No active warnings",
+    ]
+    assert discover_condition_details(entry, data, known) == []
+    binary = discover_conditions(entry, data, set())
+    assert len({e.unique_id for e in details + binary}) == 5
+    assert details[0].device_info == binary[0].device_info
+    data["params"] = {}
+    assert discover_condition_details(entry, data, set()) == []
+
+
+def test_details_follow_conditions_without_emitting_extra_activity(data):
+    from custom_components.atrea.conditions import AtreaConditionDetailsSensor
+
+    entity = AtreaConditionDetailsSensor(NS(data={}), data, "warning")
+    entity.hass = NS(bus=NS(async_fire=Mock()))
+    data["status"]["D11183"] = "1"
+    assert entity.native_value == "Filter replace interval"
+    data["status"]["D11149"] = "1"
+    assert entity.native_value == "Heat pump defrosting; Filter replace interval"
+    update(entity)
+    entity.hass.bus.async_fire.assert_not_called()
+    data["status"]["D11183"] = "0"
+    assert entity.native_value == "Heat pump defrosting"
+    data["status"]["D11149"] = "0"
+    assert entity.native_value == "No active warnings"
+
+
+@pytest.mark.parametrize("invalid", [None, "", "unknown", "2"])
+def test_details_missing_data_and_reconnection(data, invalid):
+    from custom_components.atrea.conditions import AtreaConditionDetailsSensor
+
+    entity = AtreaConditionDetailsSensor(NS(data={}), data, "alert")
+    data["status"]["D11100"] = invalid
+    assert not entity.available
+    assert entity.native_value is None
+    data["status"]["D11107"] = "1"
+    assert entity.available
+    assert entity.native_value == "Temperature sensor failure"
+    assert entity.extra_state_attributes["unavailable_codes"] == ["D11100"]
+    data["coordinator"].last_update_success = False
+    assert not entity.available
+    assert entity.native_value is None
+    data["coordinator"].last_update_success = True
+    data["status"].update(D11100="0", D11107="0")
+    assert entity.native_value == "No active faults"
+
+
+def test_details_bound_state_length_preserving_full_descriptions(data):
+    from custom_components.atrea.conditions import AtreaConditionDetailsSensor
+
+    data["status"].update(D11100="1", D11107="1")
+    data["translations"]["params"]["D11100"] = "A" * 255
+    entity = AtreaConditionDetailsSensor(NS(data={}), data, "alert")
+    assert len(entity.native_value) == 255
+    assert entity.native_value.endswith("…")
+    assert entity.extra_state_attributes["active_faults"] == [
+        "A" * 255,
+        "Temperature sensor failure",
+    ]
+
+
+def test_sensor_platform_discovers_details_when_metadata_arrives(data):
+    import asyncio
+    from custom_components.atrea.const import DOMAIN
+    from custom_components.atrea.sensor import async_setup_entry
+
+    entry = NS(data={}, entry_id="test", async_on_unload=Mock())
+    data["coordinator"].async_add_listener = Mock()
+    params = data.pop("params")
+    add = Mock()
+    asyncio.run(async_setup_entry(NS(data={DOMAIN: {"test": data}}), entry, add))
+    add.assert_not_called()
+    data["params"] = params
+    listener = data["coordinator"].async_add_listener.call_args.args[0]
+    listener()
+    assert [e.name for e in add.call_args.args[0]] == ["Fault details", "Warning details"]
+    listener()
+    assert add.call_count == 1
